@@ -1,5 +1,3 @@
-# network_packet_analyzer.py
-
 import argparse
 from scapy.all import *
 
@@ -86,15 +84,15 @@ def display_packets(packets):
 
 def main():
     parser = argparse.ArgumentParser(description="Network Packet Analyzer Tool")
-    parser.add_argument("--live", action="store_true", help="Capture packets from a live network interface")
-    parser.add_argument("--interface", type=str, help="Network interface to capture packets from")
-    parser.add_argument("--file", type=str, help="Path to a pcap file to analyze")
-    parser.add_argument("--protocol", type=str, help="Protocol to filter by (e.g., TCP, UDP, IP, IPv6)")
-    parser.add_argument("--src_ip", type=str, help="Source IP to filter by")
-    parser.add_argument("--dst_ip", type=str, help="Destination IP to filter by")
-    parser.add_argument("--src_port", type=int, help="Source port to filter by")
-    parser.add_argument("--dst_port", type=int, help="Destination port to filter by")
-    parser.add_argument("--count", type=int, help="Number of packets to capture or analyze")
+    parser.add_argument("--live", action="store_true", help="Capture packets from a live network interface.")
+    parser.add_argument("--interface", type=str, help="Network interface to capture packets from when --live is used.")
+    parser.add_argument("--file", type=str, help="Path to a pcap file to analyze.")
+    parser.add_argument("--protocol", type=str, help="Protocol to filter by (e.g., TCP, UDP, IP, IPv6).")
+    parser.add_argument("--src_ip", type=str, help="Source IP to filter by.")
+    parser.add_argument("--dst_ip", type=str, help="Destination IP to filter by.")
+    parser.add_argument("--src_port", type=int, help="Source port to filter by.")
+    parser.add_argument("--dst_port", type=int, help="Destination port to filter by.")
+    parser.add_argument("--count", type=int, help="Number of packets to capture or analyze.")
     args = parser.parse_args()
 
     if args.live:
