@@ -1,12 +1,12 @@
 import argparse
 from scapy.all import *
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.inet6 import IPv6
 
 def packet_summary(packet):
-    """Returns a summary of the packet."""
     return packet.summary()
 
 def parse_packet(packet):
-    """Parses relevant information from the packet."""
     if IP in packet:
         src_ip = packet[IP].src
         dst_ip = packet[IP].dst
@@ -18,10 +18,20 @@ def parse_packet(packet):
             "Protocol": protocol,
             "Payload": payload,
         }
+    elif IPv6 in packet:
+        src_ip = packet[IPv6].src
+        dst_ip = packet[IPv6].dst
+        protocol = packet[IPv6].nh
+        payload = packet[IPv6].payload
+        return {
+            "Source IP": src_ip,
+            "Destination IP": dst_ip,
+            "Protocol": protocol,
+            "Payload": payload,
+        }
     return {}
 
 def filter_packets(packets, protocol=None, src_ip=None, dst_ip=None, src_port=None, dst_port=None):
-    """Filters packets based on given criteria."""
     filtered_packets = []
     for packet in packets:
         if protocol:
@@ -34,9 +44,9 @@ def filter_packets(packets, protocol=None, src_ip=None, dst_ip=None, src_port=No
             elif protocol == "IPv6" and not packet.haslayer(IPv6):
                 continue
 
-        if src_ip and (packet[IP].src if IP in packet else packet[IPv6].src) != src_ip:
+        if src_ip and ((IP in packet and packet[IP].src != src_ip) or (IPv6 in packet and packet[IPv6].src != src_ip)):
             continue
-        if dst_ip and (packet[IP].dst if IP in packet else packet[IPv6].dst) != dst_ip:
+        if dst_ip and ((IP in packet and packet[IP].dst != dst_ip) or (IPv6 in packet and packet[IPv6].dst != dst_ip)):
             continue
         if src_port and packet.sport != src_port:
             continue
@@ -47,38 +57,33 @@ def filter_packets(packets, protocol=None, src_ip=None, dst_ip=None, src_port=No
     return filtered_packets
 
 def analyze_traffic(packets):
-    """Analyzes traffic for suspicious patterns."""
     protocol_count = {}
     for packet in packets:
-        protocol = packet[IP].proto if IP in packet else "IPv6"
-        if protocol in protocol_count:
-            protocol_count[protocol] += 1
-        else:
-            protocol_count[protocol] = 1
+        protocol = packet[IP].proto if IP in packet else (packet[IPv6].nh if IPv6 in packet else "Unknown")
+        protocol_count[protocol] = protocol_count.get(protocol, 0) + 1
     return protocol_count
 
 def capture_live(interface, count):
-    """Captures packets from a live network interface."""
     try:
         packets = sniff(iface=interface, count=count)
         return packets
     except Exception as e:
         print(f"Error capturing packets: {e}")
-        print("Available interfaces:")
-        print(get_if_list())
         return []
 
 def capture_from_file(file_path):
-    """Captures packets from a pcap file."""
     try:
         packets = rdpcap(file_path)
         return packets
-    except Exception as e:
+    except FileNotFoundError:
+        print(f"Error: File not found - {file_path}")
+    except scapy.error.Scapy_Exception as e:
         print(f"Error reading pcap file: {e}")
-        return []
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    return []
 
 def display_packets(packets):
-    """Displays packet information."""
     for packet in packets:
         print(packet_summary(packet))
 
@@ -124,7 +129,6 @@ def main():
     print(f"Total packets captured: {len(packets)}")
     display_packets(packets)
 
-    # Perform basic security analysis
     analysis_results = analyze_traffic(packets)
     print("\n--- Security Analysis ---")
     for protocol, count in analysis_results.items():
