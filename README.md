@@ -60,5 +60,5 @@ python packet_analyzer.py --live --interface eth0 --src_ip 192.168.1.1
 The tool will display a summary of each packet captured or read from the pcap file. It will also provide a count of packets per protocol in the security analysis section.
 
 ## Dependencies
-- Python 3.x\
+- Python 3.x
 - Scapy
